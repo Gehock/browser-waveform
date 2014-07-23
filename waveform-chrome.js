@@ -21,14 +21,16 @@
     loadBuffer = function(arr) {
       var audio, buf;
       audio = new webkitAudioContext();
-      buf = audio.createBuffer(arr, true);
-      ProcessAudio.extract(buf.getChannelData(0), sections, self.view.drawBar);
-      self.playback = PlayBuffer(audio, buf);
-      self.view.onCursor = self.playback.playAt;
-      setInterval(function() {
-        return self.view.moveCursor(self.playback.getTime() / buf.duration);
-      }, 100);
-      return typeof onReady === "function" ? onReady() : void 0;
+      audio.decodeAudioData(arr, function(buf) {
+        ProcessAudio.extract(buf.getChannelData(0), sections, self.view.drawBar);
+        self.playback = PlayBuffer(audio, buf);
+
+        self.view.onCursor = self.playback.playAt;
+        setInterval(function() {
+          return self.view.moveCursor(self.playback.getTime() / buf.duration);
+        }, 100);
+        return typeof onReady === "function" ? onReady() : void 0;
+      });
     };
     return self;
   };
@@ -73,9 +75,9 @@
       node.buffer = buffer;
       node.connect(audio.destination);
       if (t === 0) {
-        return node.noteOn(0);
+        return node.start(0);
       } else {
-        return node.noteGrainOn(0, t, buffer.duration - t);
+        return node.start(0, t);
       }
     };
     start(0);
@@ -85,7 +87,7 @@
         return paused = null;
       },
       playAt: function(t) {
-        node.noteOff(0);
+        node.stop(0);
         start(t * buffer.duration);
         return paused = null;
       },
@@ -93,7 +95,7 @@
         return paused || Math.min((Date.now() - timeStart) / 1000 + timeBasis, buffer.duration);
       },
       pause: function() {
-        node.noteOff(0);
+        node.stop(0);
         return paused = self.getTime();
       },
       isPaused: function() {
