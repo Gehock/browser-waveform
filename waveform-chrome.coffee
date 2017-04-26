@@ -17,26 +17,25 @@
   req.onload = -> loadBuffer req.response
 
   req.send()
-  
+
   loadBuffer = (arr) ->
     audio = new AudioContext()
-    buf = audio.createBuffer(arr,true)
-    
-    ProcessAudio.extract(
-      buf.getChannelData(0)
-      sections, self.view.drawBar
-    )
-    
-    self.playback = PlayBuffer audio, buf
-    self.view.onCursor = self.playback.playAt
-    
-    setInterval(
-      -> self.view.moveCursor self.playback.getTime()/buf.duration
-      100
-    )
+    audio.decodeAudioData(arr, (buf) ->
+      ProcessAudio.extract(
+        buf.getChannelData(0)
+        sections, self.view.drawBar
+      )
 
-    onReady?()
+      self.playback = PlayBuffer audio, buf
+      self.view.onCursor = self.playback.playAt
 
+      setInterval(
+        -> self.view.moveCursor self.playback.getTime()/buf.duration
+        100
+      )
+
+      onReady?()
+    )
   self
 
 
@@ -86,23 +85,23 @@
   start = (t) ->
     timeStart = Date.now()
     timeBasis = t
-    
+
     node = audio.createBufferSource()
     node.buffer = buffer
     node.connect audio.destination
     if t==0
-      node.noteOn 0
+      node.start 0
     else
-      node.noteGrainOn 0, t, buffer.duration-t
-  
+      node.start 0, t
+
   start(0)
-  
+
   self =
     play: ->
       start(paused or 0)
       paused = null
     playAt: (t) ->
-      node.noteOff 0
+      node.stop 0
       start(t*buffer.duration)
       paused = null
     getTime: ->
@@ -112,7 +111,7 @@
         buffer.duration
       )
     pause: ->
-      node.noteOff 0
+      node.stop 0
       paused = self.getTime()
     isPaused: ->
       paused isnt null
@@ -142,4 +141,3 @@
       s = data[i]
       sum += s*s
     Math.sqrt sum/data.length
-
