@@ -20,7 +20,7 @@
     req.send();
     loadBuffer = function(arr) {
       var audio, buf;
-      audio = new webkitAudioContext();
+      audio = new AudioContext();
       audio.decodeAudioData(arr, function(buf) {
         ProcessAudio.extract(buf.getChannelData(0), sections, self.view.drawBar);
         self.playback = PlayBuffer(audio, buf);

@@ -19,7 +19,7 @@
   req.send()
   
   loadBuffer = (arr) ->
-    audio = new webkitAudioContext()
+    audio = new AudioContext()
     buf = audio.createBuffer(arr,true)
     
     ProcessAudio.extract(
